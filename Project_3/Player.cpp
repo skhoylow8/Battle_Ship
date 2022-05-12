@@ -172,7 +172,8 @@ class MediocrePlayer : public Player {
     virtual Point recommendAttack();
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
-    bool findPoint(const Point& p1);
+    bool findPoint(const Point& p1, bool erase, vector<Point>& cont);
+    void addSurroundingPoints(Point prevPoint);
 
   private:
     bool state1;
@@ -227,15 +228,16 @@ bool equalPoints(Point p1, Point p2){
     return ((p1.r == p2.r) && (p1.c == p2.c));
 }
 
-bool MediocrePlayer::findPoint(const Point& p1){ // checks to see if point passed in hasn't already been attacked
-    vector<Point>::iterator p = allPosHits.begin();
-    for(; p != allPosHits.end(); p++){
+bool MediocrePlayer::findPoint(const Point& p1, bool erase, vector<Point>& cont){ // checks to see if point passed in hasn't already been attacked
+    vector<Point>::iterator p = cont.begin();
+    for(; p != cont.end(); p++){
         if(equalPoints(*p, p1))
             break;
     }
     
-    if(p != allPosHits.end()){
-        allPosHits.erase(p);
+    if(p != cont.end()){
+        if(erase)
+            cont.erase(p);
         return true;
     }
     return false;
@@ -244,51 +246,55 @@ bool MediocrePlayer::findPoint(const Point& p1){ // checks to see if point passe
 Point MediocrePlayer::recommendAttack(){
     int row = 0, col = 0;
     Point attack = Point(row,col);
-    bool hasVisited = false;
     
-    do {
-        if(state1){
+    if(state1){
+        if(allPosHits.empty()){
+            int randNum = randInt(int(possibleHits.size()));
+            attack = possibleHits[randNum]; // get random point
+            possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
+        } else{
             int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
             attack = allPosHits[randNum];
             allPosHits.erase(allPosHits.begin() + randNum);
-        } else{
-            // using previousHit we are going to go 4 up/down and 4 left/right
-            int r = previousHit.r;
-            int c = previousHit.c;
-            for(int u = r-1; u >= r-4 && u >= 0; u--){ // get four points above
-                Point p(u, c);
-                possibleHits.push_back(p);
-            }
-            for(int d = r+1; d <= r+4 && d < game().rows(); d++){ // get four points below
-                Point p(d, c);
-                possibleHits.push_back(p);
-            }
-            for(int l = c-1; l >= c-4 && l >= 0; l--){ // get four points left
-                Point p(r, l);
-                possibleHits.push_back(p);
-            }
-            for(int rig = c+1; rig <= c+4 && rig < game().cols(); rig++){ // get four points right
-                Point p(r, rig);
-                possibleHits.push_back(p);
-            }
-            // pop off the vector to get new rand point
-            int randNum = randInt(int(possibleHits.size()));
-            Point p = possibleHits[randNum]; // get first point
-            possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
-            row = p.r;
-            col = p.c;
-            attack = Point(row,col);
-            
-            if(findPoint(attack)){// might not even need here b/c takes into account if prev attacked above
-                hasVisited = false;
-            } else{
-                hasVisited = true;
-            }
         }
-    } while(hasVisited);
-    
+    } else{
+        // pop off the vector to get new rand point
+        int randNum = randInt(int(possibleHits.size()));
+        Point p = possibleHits[randNum]; // get first point
+        possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
+        row = p.r;
+        col = p.c;
+        attack = Point(row,col);
+    }
+
     return attack;
     
+}
+
+void MediocrePlayer::addSurroundingPoints(Point prevPoint){
+    // using previousHit we are going to go 4 up/down and 4 left/right
+    int r = prevPoint.r;
+    int c = prevPoint.c;
+    for(int u = r-1; u >= 0 && u >= r-4; u--){ // get four points above
+        Point p(u, c);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int d = r+1; d < game().rows() && d <= r+4; d++){ // get four points below
+        Point p(d, c);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int l = c-1; l >= 0 && l >= c-4; l--){ // get four points left
+        Point p(r, l);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int rig = c+1; rig < game().cols() && rig <= c+4; rig++){ // get four points right
+        Point p(r, rig);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
 }
 
 void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
@@ -297,6 +303,7 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
             if(!shipDestroyed){
                 state1 = false; // switch to state 2
                 previousHit = p;
+                addSurroundingPoints(previousHit);
             } else{ // if destroyed the ship then pick random point
                 state1 = true;
             }
@@ -308,6 +315,7 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
             if(!shipDestroyed){
                 state1 = false; // stay to state 2
                 previousHit = p;
+                addSurroundingPoints(previousHit);
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true;
             }
@@ -465,7 +473,7 @@ Point GoodPlayer::recommendAttack(){
                 possibleHits.erase(possibleHits.begin() + randNum);
             }
         } else if(state3){ // if in state 3, we have the direction
-            if(state2){ // if we just firgured out the direction then remove other points
+            if(state2){ // if we just figured out the direction then remove other points
                 Point prevHit = prevHits[0];
                 // using orientation remove points we don't need
                 if(orientation == HORIZONTAL){ // if horizontal, remove vertical points
@@ -490,24 +498,18 @@ Point GoodPlayer::recommendAttack(){
             }
             
             // pop off vector to get new rand point
-//            if(!possibleHits.empty()){ // might be empty after erasing points
             int randNum = randInt(int(possibleHits.size()));
             Point p = possibleHits[randNum]; // get first point
             possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
-                row = p.r;
-                col = p.c;
-                attack = Point(row,col);
+            row = p.r;
+            col = p.c;
+            attack = Point(row,col);
 
-                if(findPoint(attack, true, allPosHits)){
-                    hasVisited = false;
-                } else{
-                    hasVisited = true;
-                }
-//            } else{
-//                int randNum = randInt(int(allPosHits.size()));
-//                attack = allPosHits[randNum];
-//                allPosHits.erase(allPosHits.begin() + randNum);
-//            }
+            if(findPoint(attack, true, allPosHits)){
+                hasVisited = false;
+            } else{
+                hasVisited = true;
+            }
         }
     } while(hasVisited);
     
@@ -542,6 +544,7 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
                 Point previousHit = prevHits.front();
                 if((previousHit.r + 1 == p.r || previousHit.r - 1 == p.r) && previousHit.c == p.c){ // if its next to it then we know it is the same ship
                     // not necesarrily vertical b/c could have hit another ship
+                    // need to check symbol before moving to state 3
                     orientation = VERTICAL;
                     // go to state3
                     state1 = false; state2 = true; state3 = true;

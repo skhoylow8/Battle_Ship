@@ -129,7 +129,7 @@ int main()
         {
             cout << "============================= Game " << k
                  << " =============================" << endl;
-            Game g(3, 3);
+            Game g(5, 5);
             addStandardShips(g);
             Player* p1 = createPlayer("awful", "Awful Audrey", g);
             Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
