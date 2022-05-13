@@ -350,28 +350,33 @@ class GoodPlayer : public Player {
     virtual void recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId);
     virtual void recordAttackByOpponent(Point p);
     bool findPoint(const Point& p1, bool erase, vector<Point>& cont);
+    void addSurroundingPoints(Point prevPoint);
+    void removeSurroundingPoints(Point prevPoint, std::string direction);
+    void getDiagonalPoints(Point prevPoint);
 
   private:
     bool state1;
     bool state2;
-    bool state3;
-//    Point previousHit;
     int maxShipLength; // state 2 will use this info to add specific points
-    int currPrevHitInd;
     vector<Point> prevHits;
     vector<Point> possibleHits;
     vector<int> possibleShipLengths;
+    vector<Point> diagPoints; // use diagonal points when in state 1
     vector<Point> allPosHits;
-    Direction orientation; // state 3 will use this info
 };
 
 GoodPlayer::GoodPlayer(std::string nm, const Game& g)
-    : Player(nm, g), state1(true), state2(false), state3(false), maxShipLength(0), currPrevHitInd(0), orientation(HORIZONTAL)
+    : Player(nm, g), state1(true), state2(false), maxShipLength(0)
 {
     for(int r = 0; r < g.rows(); r++){
        for(int c = 0; c < g.cols(); c++){
            Point p = Point(r, c);
-           allPosHits.push_back(p);
+           if(g.rows()/2 == r && g.cols()/2 == c){
+               diagPoints.push_back(p);
+               // might need to get extra point if board has odd cols/rows
+           } else{
+               allPosHits.push_back(p);
+           }
        }
     }
     
@@ -415,100 +420,151 @@ bool GoodPlayer::findPoint(const Point& p1, bool erase, vector<Point>& cont){ //
     return false;
 }
 
+void GoodPlayer::addSurroundingPoints(Point prevPoint){
+    // using previousHit we are going to go up/down and left/right based on ship's length
+    int r = prevPoint.r;
+    int c = prevPoint.c;
+    
+    for(int u = r-1; u >= 0 && u > r-maxShipLength; u--){ // get four points above
+        Point p(u, c);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int d = r+1; d < game().rows() && d < r+maxShipLength; d++){ // get four points below
+        Point p(d, c);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int l = c-1; l >= 0 && l > c-maxShipLength; l--){ // get four points left
+        Point p(r, l);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            possibleHits.push_back(p);
+    }
+    for(int rig = c+1; rig < game().cols() && rig < c+maxShipLength; rig++){ // get four points right
+        Point p(r, rig);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits)) // make sure its not in allPosHits and possibleHits
+            possibleHits.push_back(p);
+    }
+}
+
+void GoodPlayer::removeSurroundingPoints(Point prevPoint, std::string direction){
+    int r = prevPoint.r;
+    int c = prevPoint.c;
+    
+    if(direction == "up"){
+        for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
+            Point currP = *p;
+            if(c == currP.c && r > currP.r){
+                allPosHits.push_back(currP);
+                p = possibleHits.erase(p);
+                p--;
+            }
+        }
+    } else if(direction == "down"){
+        for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
+            Point currP = *p;
+            if(c == currP.c && r < currP.r){
+                allPosHits.push_back(currP);
+                p = possibleHits.erase(p);
+                p--;
+            }
+        }
+    } else if(direction == "left"){
+        for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
+            Point currP = *p;
+            if(c > currP.c && r == currP.r){
+                allPosHits.push_back(currP);
+                p = possibleHits.erase(p);
+                p--;
+            }
+        }
+    } else if(direction == "right"){
+        for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
+            Point currP = *p;
+            if(c < currP.c && r == currP.r){
+                allPosHits.push_back(currP);
+                p = possibleHits.erase(p);
+                p--;
+            }
+        }
+    }
+}
+
+void GoodPlayer::getDiagonalPoints(Point prevPoint){
+    int row = prevPoint.r;
+    int col = prevPoint.c;
+    while(row-1 >= 0 && col-1 >= 0){ // gets upper left points diagonal from center
+        Point p(row-1, col-1);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            diagPoints.push_back(p);
+        row--; col--;
+    }
+
+    row = prevPoint.r;
+    col = prevPoint.c;
+    while(row-1 >= 0 && col+1 < game().cols()){ // gets upper right points diagonal from center
+        Point p(row-1, col+1);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            diagPoints.push_back(p);
+        row--; col++;
+    }
+
+    row = prevPoint.r;
+    col = prevPoint.c;
+    while(row+1 < game().rows() && col-1 >= 0){ // gets lower left points diagonal from center
+        Point p(row+1, col-1);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            diagPoints.push_back(p);
+        row++; col--;
+    }
+
+    row = prevPoint.r;
+    col = prevPoint.c;
+    while(row+1 < game().rows() && col+1 < game().cols()){ // gets lower right points diagonal from center
+        Point p(row+1, col+1);
+        if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
+            diagPoints.push_back(p);
+        row++; col++;
+    }
+}
+
 Point GoodPlayer::recommendAttack(){
     int row = 0, col = 0;
     Point attack = Point(row,col);
     bool hasVisited = false;
-    int indPrevHit = currPrevHitInd;
     
     do {
         if(state1){ // if in state 1
-            int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
-            attack = allPosHits[randNum];
-            allPosHits.erase(allPosHits.begin() + randNum);
-        } else if(state2 && !state3){ // if in state 2
-            if(indPrevHit < prevHits.size()){ // if there are previous hits to base our possible hits off of
-                // using previousHit we are going to go up/down and left/right based on ship's length
-                int r = prevHits[indPrevHit].r;
-                int c = prevHits[indPrevHit].c;
-                
-                // ******************** for some reason adding impossible hits to possible hits (126, 0) ********************************* //
-                for(int u = r-1; u >= 0 && u > r-maxShipLength; u--){ // get four points above
-                    Point p(u, c);
-                    if(findPoint(p, false, allPosHits) && !findPoint(p, false, possibleHits))
-                        possibleHits.push_back(p);
-                }
-                for(int d = r+1; d < game().rows() && d < r+maxShipLength; d++){ // get four points below
-                    Point p(d, c);
-                    if(findPoint(p, false, allPosHits) && !findPoint(p, false, possibleHits))
-                        possibleHits.push_back(p);
-                }
-                for(int l = c-1; l >= 0 && l > c-maxShipLength; l--){ // get four points left
-                    Point p(r, l);
-                    if(findPoint(p, false, allPosHits) && !findPoint(p, false, possibleHits))
-                        possibleHits.push_back(p);
-                }
-                for(int rig = c+1; rig < game().cols() && rig < c+maxShipLength; rig++){ // get four points right
-                    Point p(r, rig);
-                    if(findPoint(p, false, allPosHits) && !findPoint(p, false, possibleHits)) // make sure its not in allPosHits and possibleHits
-                        possibleHits.push_back(p);
-                }
-                // pop off vector to get new rand point
-                int randNum = randInt(int(possibleHits.size()));
-                Point p = possibleHits[randNum]; // get first point
-                possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
-                row = p.r;
-                col = p.c;
-                attack = Point(row,col);
-                
-                if(findPoint(attack, true, allPosHits)){
-                    hasVisited = false;
+            if(diagPoints.empty()){
+                if(possibleHits.empty()){
+                    int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
+                    attack = allPosHits[randNum];
+                    vector<Point>::iterator it = allPosHits.begin() + randNum;
+                    allPosHits.erase(it);
                 } else{
-                    hasVisited = true;
-                    indPrevHit++;
+                    int randNum = randInt(int(possibleHits.size()));
+                    attack = possibleHits[randNum]; // get first point
+                    vector<Point>::iterator it = possibleHits.begin()+randNum;
+                    possibleHits.erase(it); // delete point once used
                 }
-            } else{
-                int randNum = randInt(int(possibleHits.size())); // get random point from existing possible points so we don't get repeating points
-                attack = possibleHits[randNum];
-                possibleHits.erase(possibleHits.begin() + randNum);
+            } else{ // if there are still diagonal points to try get a random one
+                int randNum = randInt(int(diagPoints.size()));
+                attack = diagPoints[randNum];
+                vector<Point>::iterator it = diagPoints.begin() + randNum;
+                diagPoints.erase(it);
             }
-        } else if(state3){ // if in state 3, we have the direction
-            if(state2){ // if we just figured out the direction then remove other points
-                Point prevHit = prevHits[0];
-                // using orientation remove points we don't need
-                if(orientation == HORIZONTAL){ // if horizontal, remove vertical points
-                    for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
-                        Point currP = *p;
-                        if(prevHit.c == currP.c && prevHit.r != currP.r){
-                            p = possibleHits.erase(p);
-                            p--;
-                        }
-                    }
-                } else{ // if vertical, remove horizontal points
-                    for(vector<Point>::iterator p = possibleHits.begin(); p != possibleHits.end(); p++){
-                        Point currP = *p;
-                        if(prevHit.c != currP.c && prevHit.r == currP.r){
-                            p = possibleHits.erase(p);
-                            p--;
-                        }
-                    }
-                }
-                prevHits.erase(prevHits.begin()+0); // remove front element b/c already used
-                state2 = false;
-            }
-            
+        } else if(state2){ // if in state 2
             // pop off vector to get new rand point
-            int randNum = randInt(int(possibleHits.size()));
-            Point p = possibleHits[randNum]; // get first point
-            possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
-            row = p.r;
-            col = p.c;
-            attack = Point(row,col);
-
-            if(findPoint(attack, true, allPosHits)){
-                hasVisited = false;
+            if(possibleHits.empty()){
+                int randNum = randInt(int(diagPoints.size()));
+                attack = diagPoints[randNum];
+                vector<Point>::iterator it = diagPoints.begin() + randNum;
+                diagPoints.erase(it);
             } else{
-                hasVisited = true;
+                int randNum = randInt(int(possibleHits.size()));
+                attack = possibleHits[randNum]; // get first point
+                vector<Point>::iterator it = possibleHits.begin()+randNum;
+                possibleHits.erase(it); // delete point once used
             }
         }
     } while(hasVisited);
@@ -521,11 +577,12 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
     if(state1){ // if in state 1
         if(shotHit){ // if hit ship
             if(!shipDestroyed){ // if ship wasn't destroyed
-                state1 = false; state2 = true; state3 = false;
+                state1 = false; state2 = true;
                 
-                prevHits.push_back(p);
+                prevHits.push_back(p); // might not need prevHits
+                addSurroundingPoints(p);
             } else{ // if destroyed the ship then pick random point
-                state1 = true; state2 = false; state3 = false;
+                state1 = true; state2 = false;
                 
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
@@ -537,30 +594,16 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
             }
         }else{
             state1 = true;
+            getDiagonalPoints(p);
         }
     } else if(state2){ // if in state 2
         if(shotHit){ // if hit ship
             if(!shipDestroyed){
-                Point previousHit = prevHits.front();
-                if((previousHit.r + 1 == p.r || previousHit.r - 1 == p.r) && previousHit.c == p.c){ // if its next to it then we know it is the same ship
-                    // not necesarrily vertical b/c could have hit another ship
-                    // need to check symbol before moving to state 3
-                    orientation = VERTICAL;
-                    // go to state3
-                    state1 = false; state2 = true; state3 = true;
-                } else if((previousHit.c + 1 == p.c || previousHit.c - 1 == p.c) && previousHit.r == p.r){
-                    orientation = HORIZONTAL;
-                    // go to state3
-                    state1 = false; state2 = true; state3 = true;
-                } else{ // if its not next to it then it might be another ship
-                    // stay in state2 and switch prevHit we look at to get possible points around it
-                    state1 = false; state2 = true; state3 = false;
-                    
-                    prevHits.push_back(p);
-                    currPrevHitInd++;
-                }
+                // stay in state 2
+                state1 = false; state2 = true;
+                addSurroundingPoints(p);
             } else{ // if destroyed the ship then switch back to state 1
-                state1 = true; state2 = false; state3 = false;
+                state1 = true; state2 = false;
                 
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
@@ -570,45 +613,25 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
                 }
                 maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
                 prevHits.erase(prevHits.begin()+0); // pop prevHits front ???
-                currPrevHitInd = 0;
             }
         } else if(!possibleHits.empty()){ // if there are still points to try
             // stay in state 2
-            state1 = false; state2 = true; state3 = false;
+            state1 = false; state2 = true;
             
-            currPrevHitInd++;
-        } else{ //go back to state 1
-            state1 = true; state2 = false; state3 = false;
-        }
-    } else if(state3){
-        if(shotHit){ // if hit ship
-            if(!shipDestroyed){
-                // stay to state 3
-                state1 = false; state2 = false; state3 = true;
-                
-                prevHits.push_back(p);
-            } else{ // if destroyed the ship
-                if(!possibleHits.empty()){ // if there are still possible hits
-                    // go to state 2
-                    state1 = false; state2 = true; state3 = false;
-                } else{ // if there aren't any other possibleHits then switch back to state 1
-                    state1 = true; state2 = false; state3 = false;
-                }
-                
-                //get length of ship destroyed and remove from possibleShipLengths to update max length
-                int len = game().shipLength(shipId);
-                vector<int>::iterator p = find(possibleShipLengths.begin(), possibleShipLengths.end(), len);
-                if(p != possibleShipLengths.end()){
-                    possibleShipLengths.erase(p);
-                }
-                maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
-                prevHits.erase(prevHits.begin()+0); // pop prevHits front ???
+            Point previousHit = prevHits.front();
+            if(previousHit.c - 1 == p.c){
+                removeSurroundingPoints(previousHit, "left");
+            } else if(previousHit.c + 1 == p.c){
+                removeSurroundingPoints(previousHit, "right");
+            } else if(previousHit.r - 1 == p.r){
+                removeSurroundingPoints(previousHit, "up");
+            } else if (previousHit.r + 1 == p.r){
+                removeSurroundingPoints(previousHit, "down");
             }
-        } else if(!possibleHits.empty()){ // if there are still points to try
-            // stay in state 3
-            state1 = false; state2 = false; state3 = true;
-        } else{ // go to state 1 or 2????
-            state1 = true; state2 = false; state3 = false;;
+            // remove previous hit here???
+            
+        } else{ //go back to state 1
+            state1 = true; state2 = false;
         }
     }
 }

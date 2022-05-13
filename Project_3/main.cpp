@@ -93,6 +93,9 @@ int main()
     cout << "  5.  A " << NTRIALS
          << "-game match between a mediocre and a good player, with no pauses"
          << endl;
+    cout << "  6.  A " << NTRIALS
+         << "-game match between a good and an awful player, with no pauses"
+         << endl;
     cout << "Enter your choice: ";
     string line;
     getline(cin,line);
@@ -164,10 +167,35 @@ int main()
         {
             cout << "============================= Game " << k
                  << " =============================" << endl;
-            Game g(3, 3);
+            Game g(5, 5);
             addStandardShips(g);
             Player* p1 = createPlayer("good", "Good Grace", g);
             Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
+            Player* winner = (k % 2 == 1 ?
+                                g.play(p1, p2, false) : g.play(p2, p1, false));
+            if (winner == p1)
+                nGoodWins++;
+            delete p1;
+            delete p2;
+        }
+        cout << "The good player won " << nGoodWins << " out of "
+             << NTRIALS << " games." << endl;
+          // We'd expect a mediocre player to win most of the games against
+          // an awful player.  Similarly, a good player should outperform
+          // a mediocre player.
+    }
+    else if (line[0] == '6')
+    {
+        int nGoodWins = 0;
+
+        for (int k = 1; k <= NTRIALS; k++)
+        {
+            cout << "============================= Game " << k
+                 << " =============================" << endl;
+            Game g(5, 5);
+            addStandardShips(g);
+            Player* p1 = createPlayer("good", "Good Grace", g);
+            Player* p2 = createPlayer("awful", "Awful Amy", g);
             Player* winner = (k % 2 == 1 ?
                                 g.play(p1, p2, false) : g.play(p2, p1, false));
             if (winner == p1)
