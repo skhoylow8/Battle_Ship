@@ -129,11 +129,11 @@ bool HumanPlayer::placeShips(Board& b){
     return true;
 }
 
-void HumanPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+void HumanPlayer::recordAttackResult(Point /*p*/, bool /*validShot*/, bool /*shotHit*/, bool /*shipDestroyed*/, int /*shipId*/){
     // HumanPlayer completely ignores the result of any attack
 }
 
-void HumanPlayer::recordAttackByOpponent(Point p){
+void HumanPlayer::recordAttackByOpponent(Point /*p*/){
     // HumanPlayer completely ignores what the opponent does
 }
 
@@ -297,7 +297,7 @@ void MediocrePlayer::addSurroundingPoints(Point prevPoint){
     }
 }
 
-void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+void MediocrePlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, bool shipDestroyed, int /*shipId*/){
     if(state1){ // if in state 1
         if(shotHit){ // if hit ship
             if(!shipDestroyed){
@@ -325,7 +325,7 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
     }
 }
 
-void MediocrePlayer::recordAttackByOpponent(Point p){
+void MediocrePlayer::recordAttackByOpponent(Point /*p*/){
     // MediocrePlayer completely ignores what the opponent does
 }
 
@@ -354,9 +354,10 @@ class GoodPlayer : public Player {
 
   private:
     bool state1;
-    bool state2;
+//    bool state2;
     int maxShipLength; // state 2 will use this info to add specific points
-    vector<Point> prevHits;
+    Point previousHit;
+//    vector<Point> prevHits;
     vector<Point> possibleHits;
     vector<int> possibleShipLengths;
     vector<Point> diagPoints; // use diagonal points when in state 1
@@ -364,7 +365,7 @@ class GoodPlayer : public Player {
 };
 
 GoodPlayer::GoodPlayer(std::string nm, const Game& g)
-    : Player(nm, g), state1(true), state2(false), maxShipLength(0)
+    : Player(nm, g), state1(true), maxShipLength(0)
 {
     for(int r = 0; r < g.rows(); r++){
        for(int c = 0; c < g.cols(); c++){
@@ -529,9 +530,9 @@ void GoodPlayer::getDiagonalPoints(Point prevPoint){
 Point GoodPlayer::recommendAttack(){
     int row = 0, col = 0;
     Point attack = Point(row,col);
-    bool hasVisited = false;
+//    bool hasVisited = false;
     
-    do {
+//    do {
         if(state1){ // if in state 1
             if(diagPoints.empty()){
                 if(possibleHits.empty()){
@@ -551,7 +552,7 @@ Point GoodPlayer::recommendAttack(){
                 vector<Point>::iterator it = diagPoints.begin() + randNum;
                 diagPoints.erase(it);
             }
-        } else if(state2){ // if in state 2
+        } else{ // if in state 2
             // pop off vector to get new rand point
             if(possibleHits.empty()){
                 int randNum = randInt(int(diagPoints.size()));
@@ -565,22 +566,23 @@ Point GoodPlayer::recommendAttack(){
                 possibleHits.erase(it); // delete point once used
             }
         }
-    } while(hasVisited);
+//    } while(hasVisited);
     
     return attack;
     
 }
 
-void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool shipDestroyed, int shipId){
+void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, bool shipDestroyed, int shipId){
     if(state1){ // if in state 1
         if(shotHit){ // if hit ship
             if(!shipDestroyed){ // if ship wasn't destroyed
-                state1 = false; state2 = true;
+                state1 = false;
                 
-                prevHits.push_back(p); // might not need prevHits
+                previousHit = p;
+//                prevHits.push_back(p); // might not need prevHits
                 addSurroundingPoints(p);
             } else{ // if destroyed the ship then pick random point
-                state1 = true; state2 = false;
+                state1 = true;
                 
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
@@ -588,20 +590,21 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
                 if(p != possibleShipLengths.end()){
                     possibleShipLengths.erase(p);
                 }
-                maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
+                if(!possibleShipLengths.empty())
+                    maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
             }
         }else{
             state1 = true;
-            getDiagonalPoints(p);
+//            getDiagonalPoints(p);
         }
-    } else if(state2){ // if in state 2
+    } else { // if in state 2
         if(shotHit){ // if hit ship
             if(!shipDestroyed){
                 // stay in state 2
-                state1 = false; state2 = true;
+                state1 = false;
 //                addSurroundingPoints(p);
             } else{ // if destroyed the ship then switch back to state 1
-                state1 = true; state2 = false;
+                state1 = true;
                 
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
@@ -609,14 +612,14 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
                 if(p != possibleShipLengths.end()){
                     possibleShipLengths.erase(p);
                 }
-                maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
-                prevHits.erase(prevHits.begin()+0); // pop prevHits front ???
+                if(!possibleShipLengths.empty())
+                    maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
+//                prevHits.erase(prevHits.begin()+0); // pop prevHits front ???
             }
         } else if(!possibleHits.empty()){ // if there are still points to try
             // stay in state 2
-            state1 = false; state2 = true;
+            state1 = false;
             
-            Point previousHit = prevHits[0];
             if(previousHit.c - 1 == p.c){
                 removeSurroundingPoints(previousHit, "left");
             } else if(previousHit.c + 1 == p.c){
@@ -626,15 +629,14 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
             } else if (previousHit.r + 1 == p.r){
                 removeSurroundingPoints(previousHit, "down");
             }
-            // remove previous hit here???
             
         } else{ //go back to state 1
-            state1 = true; state2 = false;
+            state1 = true;
         }
     }
 }
 
-void GoodPlayer::recordAttackByOpponent(Point p){
+void GoodPlayer::recordAttackByOpponent(Point /*p*/){
     // MediocrePlayer completely ignores what the opponent does
 }
 
