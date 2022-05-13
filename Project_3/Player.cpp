@@ -314,8 +314,6 @@ void MediocrePlayer::recordAttackResult(Point p, bool validShot, bool shotHit, b
         if(shotHit){ // if hit ship
             if(!shipDestroyed){
                 state1 = false; // stay to state 2
-                previousHit = p;
-                addSurroundingPoints(previousHit);
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true;
             }
@@ -601,7 +599,7 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
             if(!shipDestroyed){
                 // stay in state 2
                 state1 = false; state2 = true;
-                addSurroundingPoints(p);
+//                addSurroundingPoints(p);
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true; state2 = false;
                 
@@ -618,7 +616,7 @@ void GoodPlayer::recordAttackResult(Point p, bool validShot, bool shotHit, bool 
             // stay in state 2
             state1 = false; state2 = true;
             
-            Point previousHit = prevHits.front();
+            Point previousHit = prevHits[0];
             if(previousHit.c - 1 == p.c){
                 removeSurroundingPoints(previousHit, "left");
             } else if(previousHit.c + 1 == p.c){

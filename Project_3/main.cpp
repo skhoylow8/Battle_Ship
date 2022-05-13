@@ -116,7 +116,7 @@ int main()
     }
     else if (line[0] == '2')
     {
-        Game g(5, 5);
+        Game g(10, 10);
         addStandardShips(g);
         Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
         Player* p2 = createPlayer("human", "Shuman the Human", g);
@@ -151,7 +151,7 @@ int main()
     }
     else if (line[0] == '4')
     {
-        Game g(5, 5);
+        Game g(10, 10);
         addStandardShips(g);
         Player* p1 = createPlayer("human", "Player 1", g);
         Player* p2 = createPlayer("human", "Player 2", g);
@@ -192,7 +192,7 @@ int main()
         {
             cout << "============================= Game " << k
                  << " =============================" << endl;
-            Game g(5, 5);
+            Game g(10, 10);
             addStandardShips(g);
             Player* p1 = createPlayer("good", "Good Grace", g);
             Player* p2 = createPlayer("awful", "Awful Amy", g);

@@ -225,7 +225,7 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
         return p1;
     }
     
-    return nullptr;  // This compiles but may not be correct
+    return nullptr;
 }
 
 //******************** Game functions *******************************
