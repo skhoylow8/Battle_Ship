@@ -168,7 +168,10 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
                     hitType = "missed";
                 }
                 cout << p1->name() << " attacked (" << p.r << "," << p.c << ") and " << hitType << ", resulting in: " << endl;
-                b2.display(true);
+                if(p1->isHuman())
+                    b2.display(true);
+                else
+                    b2.display(false);
             }else {
                 cout << p1->name() << " waisted a shot at (" << p.r << "," << p.c << ")." << endl;
             }
@@ -198,7 +201,10 @@ Player* GameImpl::play(Player* p1, Player* p2, Board& b1, Board& b2, bool should
                     hitType = "missed";
                 }
                 cout << p2->name() << " attacked (" << p.r << "," << p.c << ") and " << hitType << ", resulting in: " << endl;
-                b1.display(true);
+                if(p2->isHuman())
+                    b1.display(true);
+                else
+                    b1.display(false);
             }else {
                 cout << p2->name() << " waisted a shot at (" << p.r << "," << p.c << ")." << endl;
             }

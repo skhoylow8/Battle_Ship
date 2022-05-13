@@ -87,14 +87,14 @@ int main()
     cout << "  1.  A mini-game between two mediocre players" << endl;
     cout << "  2.  A mediocre player against a human player" << endl;
     cout << "  3.  A " << NTRIALS
-         << "-game match between a mediocre and an awful player, with no pauses"
+         << "-game match between a Mediocre and an Awful player, with no pauses"
          << endl;
-    cout << "  4.  A human player against another human player" << endl;
+    cout << "  4.  A Human player against another Human player" << endl;
     cout << "  5.  A " << NTRIALS
-         << "-game match between a mediocre and a good player, with no pauses"
+         << "-game match between a Mediocre and a Good player, with no pauses"
          << endl;
     cout << "  6.  A " << NTRIALS
-         << "-game match between a good and an awful player, with no pauses"
+         << "-game match between a Good and an Awful player, with no pauses"
          << endl;
     cout << "Enter your choice: ";
     string line;
