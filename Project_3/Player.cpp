@@ -11,11 +11,32 @@
 #include "globals.h"
 #include <iostream>
 #include <string>
-#include <queue>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 using namespace std;
+
+class Timer
+{
+  public:
+    Timer()
+    {
+        start();
+    }
+    void start()
+    {
+        m_time = std::chrono::high_resolution_clock::now();
+    }
+    double elapsed() const
+    {
+        std::chrono::duration<double,std::milli> diff =
+                          std::chrono::high_resolution_clock::now() - m_time;
+        return diff.count();
+    }
+  private:
+    std::chrono::high_resolution_clock::time_point m_time;
+};
 
 //*********************************************************************
 //  AwfulPlayer
@@ -390,6 +411,9 @@ GoodPlayer::GoodPlayer(std::string nm, const Game& g)
 }
 
 bool GoodPlayer::placeShips(Board& b){
+    Timer timer;
+    timer.start();
+    
     int numOfTries = 0;
     while(numOfTries < 50){
         b.block();
@@ -401,6 +425,8 @@ bool GoodPlayer::placeShips(Board& b){
         b.unblock();
         numOfTries++;
     }
+    
+    cerr << "GoodPlayer::placeShips()" << timer.elapsed() << endl;
     return false;
 }
 
@@ -528,6 +554,9 @@ void GoodPlayer::getDiagonalPoints(Point prevPoint){
 }
 
 Point GoodPlayer::recommendAttack(){
+    Timer timer;
+    timer.start();
+    
     int row = 0, col = 0;
     Point attack = Point(row,col);
 //    bool hasVisited = false;
@@ -568,11 +597,16 @@ Point GoodPlayer::recommendAttack(){
         }
 //    } while(hasVisited);
     
+    cerr << "GoodPlayer::recommendAttack(): " << timer.elapsed() << endl;
+    
     return attack;
     
 }
 
 void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, bool shipDestroyed, int shipId){
+    Timer timer;
+    timer.start();
+    
     if(state1){ // if in state 1
         if(shotHit){ // if hit ship
             if(!shipDestroyed){ // if ship wasn't destroyed
@@ -634,6 +668,7 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
             state1 = true;
         }
     }
+    cerr << "GoodPlayer::recordAttackResult(): " << timer.elapsed() << endl;
 }
 
 void GoodPlayer::recordAttackByOpponent(Point /*p*/){

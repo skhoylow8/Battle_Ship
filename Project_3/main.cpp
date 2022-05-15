@@ -7,7 +7,7 @@
 
 #include "Game.h"
 #include "Player.h"
-#include "Board.h"
+//#include "Board.h"
 #include <iostream>
 #include <string>
 
@@ -15,25 +15,15 @@ using namespace std;
 
 bool addStandardShips(Game& g)
 {
-    return /*g.addShip(5, 'A', "aircraft carrier")  &&
+    return g.addShip(5, 'A', "aircraft carrier")  &&
            g.addShip(4, 'B', "battleship")  &&
-           g.addShip(3, 'D', "destroyer")  &&*/
+           g.addShip(3, 'D', "destroyer")  &&
            g.addShip(3, 'S', "submarine")  &&
            g.addShip(2, 'P', "patrol boat");
 }
 
 int main()
 {
-    // Test Mediocre player
-//    Game g(5, 5);
-//    addStandardShips(g);
-//    Player* p1 = createPlayer("mediocre", "Mediocre Midori", g);
-//    Board b(g);
-//    p1->placeShips(b);
-//    b.display(false);
-//
-//    delete p1;
-//
     // Test Board and Game functionality
 //    Game g(10,10);
 //    addStandardShips(g);
@@ -132,7 +122,7 @@ int main()
         {
             cout << "============================= Game " << k
                  << " =============================" << endl;
-            Game g(5, 5);
+            Game g(10, 10);
             addStandardShips(g);
             Player* p1 = createPlayer("awful", "Awful Audrey", g);
             Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
@@ -167,7 +157,7 @@ int main()
         {
             cout << "============================= Game " << k
                  << " =============================" << endl;
-            Game g(5, 5);
+            Game g(10, 10);
             addStandardShips(g);
             Player* p1 = createPlayer("good", "Good Grace", g);
             Player* p2 = createPlayer("mediocre", "Mediocre Mimi", g);
