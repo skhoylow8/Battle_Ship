@@ -177,11 +177,6 @@ Point HumanPlayer::recommendAttack(){
 //  MediocrePlayer
 //*********************************************************************
 
-// TODO:  You need to replace this with a real class declaration and
-//        implementation.
-// Remember that Mediocre::placeShips(Board& b) must start by calling
-// b.block(), and must call b.unblock() just before returning.
-
 class MediocrePlayer : public Player {
   public:
     MediocrePlayer(std::string nm, const Game& g)
@@ -221,7 +216,6 @@ bool recurPlaceShips(Board& b, const Game& g, int start, int end){
             if(b.placeShip(p, start, HORIZONTAL)){
                 if(!recurPlaceShips(b, g, start+1, end)){
                     b.unplaceShip(p, start, HORIZONTAL);
-                    // increment numOfTries here?
                 } else{
                     return true;
                 }
@@ -289,11 +283,8 @@ Point MediocrePlayer::recommendAttack(){
     } else{
         // pop off the vector to get new rand point
         int randNum = randInt(int(possibleHits.size()));
-        Point p = possibleHits[randNum]; // get first point
+        attack = possibleHits[randNum]; // get first point
         possibleHits.erase(possibleHits.begin()+randNum); // delete point once used
-        row = p.r;
-        col = p.c;
-        attack = Point(row,col);
     }
 
     return attack;
@@ -363,9 +354,6 @@ void MediocrePlayer::recordAttackByOpponent(Point /*p*/){
 //  GoodPlayer
 //*********************************************************************
 
-// TODO:  You need to replace this with a real class declaration and
-//        implementation.
-
 class GoodPlayer : public Player {
   public:
     GoodPlayer(std::string nm, const Game& g);
@@ -383,10 +371,8 @@ class GoodPlayer : public Player {
 
   private:
     bool state1;
-//    bool state2;
     int maxShipLength; // state 2 will use this info to add specific points
     Point previousHit;
-//    vector<Point> prevHits;
     vector<Point> possibleHits;
     vector<int> possibleShipLengths;
     vector<Point> diagPoints; // use diagonal points when in state 1
@@ -401,7 +387,6 @@ GoodPlayer::GoodPlayer(std::string nm, const Game& g)
            Point p = Point(r, c);
            if(g.rows()/2 == r && g.cols()/2 == c){
                diagPoints.push_back(p);
-               // might need to get extra point if board has odd cols/rows
            } else{
                allPosHits.push_back(p);
            }
@@ -415,7 +400,8 @@ GoodPlayer::GoodPlayer(std::string nm, const Game& g)
     }
     // then sort it in ascending order, with largest length at the end
     sort(possibleShipLengths.begin(), possibleShipLengths.end());
-    maxShipLength = possibleShipLengths[possibleShipLengths.size()-1]; 
+    if(!possibleShipLengths.empty())
+        maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
 }
 
 bool GoodPlayer::placeShips(Board& b){
@@ -524,37 +510,37 @@ void GoodPlayer::removeSurroundingPoints(Point prevPoint, std::string direction)
 }
 
 void GoodPlayer::getDiagonalPoints(Point prevPoint){
-    int row = prevPoint.r;
-    int col = prevPoint.c;
-    while(row-1 >= 0 && col-1 >= 0){ // gets upper left points diagonal from center
-        Point p(row-1, col-1);
+    int row = prevPoint.r-1;
+    int col = prevPoint.c-1;
+    while(row >= 0 && col >= 0){ // gets upper left points diagonal from center
+        Point p(row, col);
         if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
             diagPoints.push_back(p);
         row--; col--;
     }
 
-    row = prevPoint.r;
-    col = prevPoint.c;
-    while(row-1 >= 0 && col+1 < game().cols()){ // gets upper right points diagonal from center
-        Point p(row-1, col+1);
+    row = prevPoint.r -1;
+    col = prevPoint.c + 1;
+    while(row >= 0 && col < game().cols()){ // gets upper right points diagonal from center
+        Point p(row, col);
         if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
             diagPoints.push_back(p);
         row--; col++;
     }
 
-    row = prevPoint.r;
-    col = prevPoint.c;
-    while(row+1 < game().rows() && col-1 >= 0){ // gets lower left points diagonal from center
-        Point p(row+1, col-1);
+    row = prevPoint.r + 1;
+    col = prevPoint.c - 1;
+    while(row < game().rows() && col >= 0){ // gets lower left points diagonal from center
+        Point p(row, col);
         if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
             diagPoints.push_back(p);
         row++; col--;
     }
 
-    row = prevPoint.r;
-    col = prevPoint.c;
-    while(row+1 < game().rows() && col+1 < game().cols()){ // gets lower right points diagonal from center
-        Point p(row+1, col+1);
+    row = prevPoint.r + 1;
+    col = prevPoint.c + 1;
+    while(row < game().rows() && col < game().cols()){ // gets lower right points diagonal from center
+        Point p(row, col);
         if(findPoint(p, true, allPosHits) && !findPoint(p, false, possibleHits))
             diagPoints.push_back(p);
         row++; col++;
@@ -623,9 +609,7 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
         if(shotHit){ // if hit ship
             if(!shipDestroyed){ // if ship wasn't destroyed
                 state1 = false;
-                
                 previousHit = p;
-//                prevHits.push_back(p); // might not need prevHits
                 addSurroundingPoints(p);
             } else{ // if destroyed the ship then pick random point
                 state1 = true;
@@ -641,14 +625,13 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
             }
         }else{
             state1 = true;
-//            getDiagonalPoints(p);
+            getDiagonalPoints(p);
         }
     } else { // if in state 2
         if(shotHit){ // if hit ship
             if(!shipDestroyed){
                 // stay in state 2
                 state1 = false;
-//                addSurroundingPoints(p);
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true;
                 
@@ -660,7 +643,6 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
                 }
                 if(!possibleShipLengths.empty())
                     maxShipLength = possibleShipLengths[possibleShipLengths.size()-1];
-//                prevHits.erase(prevHits.begin()+0); // pop prevHits front ???
             }
         } else if(!possibleHits.empty()){ // if there are still points to try
             // stay in state 2
