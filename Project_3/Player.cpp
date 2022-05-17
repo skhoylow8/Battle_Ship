@@ -559,43 +559,47 @@ Point GoodPlayer::recommendAttack(){
     
     int row = 0, col = 0;
     Point attack = Point(row,col);
-//    bool hasVisited = false;
-    
-//    do {
-        if(state1){ // if in state 1
-            if(diagPoints.empty()){
-                if(possibleHits.empty()){
-                    int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
-                    attack = allPosHits[randNum];
-                    vector<Point>::iterator it = allPosHits.begin() + randNum;
-                    allPosHits.erase(it);
-                } else{
-                    int randNum = randInt(int(possibleHits.size()));
-                    attack = possibleHits[randNum]; // get first point
-                    vector<Point>::iterator it = possibleHits.begin()+randNum;
-                    possibleHits.erase(it); // delete point once used
-                }
-            } else{ // if there are still diagonal points to try get a random one
-                int randNum = randInt(int(diagPoints.size()));
-                attack = diagPoints[randNum];
-                vector<Point>::iterator it = diagPoints.begin() + randNum;
-                diagPoints.erase(it);
-            }
-        } else{ // if in state 2
-            // pop off vector to get new rand point
+
+    if(state1){ // if in state 1
+        if(diagPoints.empty()){
             if(possibleHits.empty()){
-                int randNum = randInt(int(diagPoints.size()));
-                attack = diagPoints[randNum];
-                vector<Point>::iterator it = diagPoints.begin() + randNum;
-                diagPoints.erase(it);
+                int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
+                attack = allPosHits[randNum];
+                vector<Point>::iterator it = allPosHits.begin() + randNum;
+                allPosHits.erase(it);
             } else{
                 int randNum = randInt(int(possibleHits.size()));
                 attack = possibleHits[randNum]; // get first point
                 vector<Point>::iterator it = possibleHits.begin()+randNum;
                 possibleHits.erase(it); // delete point once used
             }
+        } else{ // if there are still diagonal points to try get a random one
+            int randNum = randInt(int(diagPoints.size()));
+            attack = diagPoints[randNum];
+            vector<Point>::iterator it = diagPoints.begin() + randNum;
+            diagPoints.erase(it);
         }
-//    } while(hasVisited);
+    } else{ // if in state 2
+        // pop off vector to get new rand point
+        if(possibleHits.empty()){
+            if(diagPoints.empty()){
+                int randNum = randInt(int(allPosHits.size())); // get random point from existing possible points so we don't get repeating points
+                attack = allPosHits[randNum];
+                vector<Point>::iterator it = allPosHits.begin() + randNum;
+                allPosHits.erase(it);
+            } else{
+                int randNum = randInt(int(diagPoints.size()));
+                attack = diagPoints[randNum];
+                vector<Point>::iterator it = diagPoints.begin() + randNum;
+                diagPoints.erase(it);
+            }
+        } else{
+            int randNum = randInt(int(possibleHits.size()));
+            attack = possibleHits[randNum]; // get first point
+            vector<Point>::iterator it = possibleHits.begin()+randNum;
+            possibleHits.erase(it); // delete point once used
+        }
+    }
     
     cerr << "GoodPlayer::recommendAttack(): " << timer.elapsed() << endl;
     
