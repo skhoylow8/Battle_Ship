@@ -191,18 +191,18 @@ void BoardImpl::display(bool shotsOnly) const
         if(i == 0){
             cout << "  ";
             for(int j = 0; j < m_game.cols(); j++){
-                cout <<  j << " ";
+                cout <<  j;
             }
             cout << endl;
         }
         cout << i << " ";
         for(int j = 0; j < m_game.cols(); j++){
             if(shotsOnly && (board[i][j] == '.' || board[i][j] == 'X' || board[i][j] == 'o'))
-                cout << board[i][j] << " ";
+                cout << board[i][j];
             else if(!shotsOnly)
-                cout << board[i][j] << " ";
+                cout << board[i][j];
             else
-                cout << ". ";
+                cout << ".";
         }
         cout << endl;
     }

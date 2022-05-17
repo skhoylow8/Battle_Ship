@@ -126,24 +126,32 @@ bool HumanPlayer::placeShips(Board& b){
     b.display(false);
     for(int i = 0; i < game().nShips(); i++){
         char direction;
-        cout << "Enter h or v for direction of " << game().shipName(i) << "(length " << game().shipLength(i) << "): ";
-        cin >> direction;
+        Direction d = HORIZONTAL;
+        do{
+            cout << "Enter h or v for direction of " << game().shipName(i) << "(length " << game().shipLength(i) << "): ";
+            cin >> direction;
+            
+            if(direction == 'h')
+                d = HORIZONTAL;
+            else if(direction == 'v')
+                d = VERTICAL;
+            else
+                cout << "Direction must be h or v." << endl;
+        } while(!(direction == 'h' || direction == 'v'));
         
-        Direction d = HORIZONTAL; // should i just default it to horizontal
-        if(direction == 'h')
-            d = HORIZONTAL;
-        else if(direction == 'v')
-            d = VERTICAL;
-        
-        int row, col = 0;
-        cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
-        if(!getLineWithTwoIntegers(row, col))
-            return false;
-        
-        Point p(row, col);
-        
-        if(!b.placeShip(p, i, d))
-            return false;
+        int row = 0, col = 0;
+        bool valid = true;
+        do{
+            cout << "Enter row and column of leftmost cell (e.g., 3 5): ";
+            getLineWithTwoIntegers(row, col);
+            Point p(row, col);
+            if(!game().isValid(p) || !b.placeShip(p, i, d)){
+                valid = false;
+                cout << "The ship cannot be placed there." << endl;
+            } else {
+                valid = true;
+            }
+        } while(!valid);
         
         b.display(false); // display board with newly placed ship
     }

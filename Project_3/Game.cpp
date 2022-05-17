@@ -86,8 +86,10 @@ bool GameImpl::addShip(int length, char symbol, string name)
     if(m_rows - length < 0 || m_cols - length < 0)
         return false;
     
-    if(symbol == 'X'  ||  symbol == '.'  ||  symbol == 'o')
+    if(symbol == '#'){
+        cout << "Character " << symbol << " must not be used as a ship symbol"<< endl;
         return false;
+    }
     
     if(!isascii(symbol)  ||  !isprint(symbol))
         return false;
