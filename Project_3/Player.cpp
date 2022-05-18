@@ -205,6 +205,7 @@ class MediocrePlayer : public Player {
     vector<Point> possibleHits;
     vector<Point> allPosHits;
 };
+
 // *********************** used in Mediocre and Good Player ************************************** //
 bool recurPlaceShips(Board& b, const Game& g, int start, int end){
     if(start == end) // we placed all the ships
@@ -426,6 +427,7 @@ bool GoodPlayer::placeShips(Board& b){
         const Game& g = game();
         if(recurPlaceShips(b, g, 0, game().nShips())){
             b.unblock();
+            cerr << "GoodPlayer::placeShips()" << timer.elapsed() << endl;
             return true;
         }
         b.unblock();

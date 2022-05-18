@@ -7,7 +7,7 @@
 
 #include "Game.h"
 #include "Player.h"
-//#include "Board.h"
+#include "Board.h"
 #include <iostream>
 #include <string>
 
@@ -24,6 +24,15 @@ bool addStandardShips(Game& g)
 
 int main()
 {
+    // Test Good Player placeShips
+//    Game g(10, 10);
+//    addStandardShips(g);
+//    Player* p1 = createPlayer("good", "Good Grace", g);
+//    Board b(g);
+//
+//    p1->placeShips(b);
+//    b.display(false);
+    
     // Test Board and Game functionality
 //    Game g(10,10);
 //    addStandardShips(g);
@@ -71,7 +80,7 @@ int main()
 //    b.display(true);
         
     // Test play function in Game
-    const int NTRIALS = 10;
+    const int NTRIALS = 100;
 
     cout << "Select one of these choices for an example of the game:" << endl;
     cout << "  1.  A mini-game between two mediocre players" << endl;
