@@ -220,7 +220,8 @@ bool recurPlaceShips(Board& b, const Game& g, int start, int end){
                 } else{
                     return true;
                 }
-            } else if(b.placeShip(p, start, VERTICAL)){
+            }
+            if(b.placeShip(p, start, VERTICAL)){
                 if(!recurPlaceShips(b, g, start+1, end)){
                     b.unplaceShip(p, start, VERTICAL);
                 } else{
@@ -677,14 +678,14 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
             // stay in state 2
             state1 = false;
             
-            if(previousHit.c - 1 == p.c){
-                removeSurroundingPoints(previousHit, "left");
-            } else if(previousHit.c + 1 == p.c){
-                removeSurroundingPoints(previousHit, "right");
-            } else if(previousHit.r - 1 == p.r){
-                removeSurroundingPoints(previousHit, "up");
-            } else if (previousHit.r + 1 == p.r){
-                removeSurroundingPoints(previousHit, "down");
+            if(previousHit.c == p.c){
+                removeSurroundingPoints(p, "left");
+            } else if(previousHit.c == p.c){
+                removeSurroundingPoints(p, "right");
+            } else if(previousHit.r == p.r){
+                removeSurroundingPoints(p, "up");
+            } else if (previousHit.r == p.r){
+                removeSurroundingPoints(p, "down");
             }
             
         } else{ //go back to state 1

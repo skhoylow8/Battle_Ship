@@ -106,6 +106,8 @@ bool BoardImpl::placeShip(Point topOrLeft, int shipId, Direction dir)
     for(vector<ShipInfo>::iterator i = shipInfo.begin(); i != shipInfo.end(); i++){//if the ship is in this vector then it was already placed
         if(i->id == shipId)
             return false;
+        if(i->symbol == shipSymbol)
+            return false;
     }
     ShipInfo newShip;
     newShip.id = shipId;
