@@ -326,6 +326,12 @@ void MediocrePlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHi
                 addSurroundingPoints(previousHit);
             } else{ // if destroyed the ship then pick random point
                 state1 = true;
+                
+                for(vector<Point>::iterator i = possibleHits.begin(); i != possibleHits.end(); i++){
+                    allPosHits.push_back(*i); // add the points we didn't hit back to this vector
+                }
+                if(!possibleHits.empty()) // erase from possible hits once ship is destroyed
+                    possibleHits.erase(possibleHits.begin(), possibleHits.end());
             }
         } else{
             state1 = true;
@@ -336,6 +342,12 @@ void MediocrePlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHi
                 state1 = false; // stay to state 2
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true;
+                
+                for(vector<Point>::iterator i = possibleHits.begin(); i != possibleHits.end(); i++){
+                    allPosHits.push_back(*i); // add the points we didn't hit back to this vector
+                }
+                if(!possibleHits.empty()) // erase from possible hits once ship is destroyed
+                    possibleHits.erase(possibleHits.begin(), possibleHits.end());
             }
         } else if(!possibleHits.empty()){ // if there are still points to try
             state1 = false; // stay in state 2
