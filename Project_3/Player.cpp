@@ -400,6 +400,7 @@ GoodPlayer::GoodPlayer(std::string nm, const Game& g)
            Point p = Point(r, c);
            if(g.rows()/2 == r && g.cols()/2 == c){
                diagPoints.push_back(p);
+               getDiagonalPoints(p);
            } else{
                allPosHits.push_back(p);
            }
@@ -628,6 +629,13 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
             } else{ // if destroyed the ship then pick random point
                 state1 = true;
                 
+                // remove possible hits once ship is destroyed
+                for(vector<Point>::iterator i = possibleHits.begin(); i != possibleHits.end(); i++){
+                    allPosHits.push_back(*i); // add the points we didn't hit back to this vector
+                }
+                if(!possibleHits.empty()) // erase from possible hits once ship is destroyed
+                    possibleHits.erase(possibleHits.begin(), possibleHits.end());
+                
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
                 vector<int>::iterator p = find(possibleShipLengths.begin(), possibleShipLengths.end(), len);
@@ -648,6 +656,13 @@ void GoodPlayer::recordAttackResult(Point p, bool /*validShot*/, bool shotHit, b
                 state1 = false;
             } else{ // if destroyed the ship then switch back to state 1
                 state1 = true;
+                
+                // remove possible hits once ship is destroyed
+                for(vector<Point>::iterator i = possibleHits.begin(); i != possibleHits.end(); i++){
+                    allPosHits.push_back(*i); // add the points we didn't hit back to this vector
+                }
+                if(!possibleHits.empty()) // erase from possible hits once ship is destroyed
+                    possibleHits.erase(possibleHits.begin(), possibleHits.end());
                 
                 //get length of ship destroyed and remove from possibleShipLengths
                 int len = game().shipLength(shipId);
